@@ -1,6 +1,8 @@
 # Core RL & Simulation
+mo-gymnasium[mario]>=1.0.0
 gym-super-mario-bros>=7.4.0
 nes-py>=8.2.1
+gymnasium>=0.29.0
 
 # Deep Learning
 torch>=2.0.0
