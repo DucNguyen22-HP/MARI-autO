@@ -1,0 +1,23 @@
+# Core RL & Simulation
+gym-super-mario-bros>=7.4.0
+nes-py>=8.2.1
+
+# Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Numerical & Processing
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# Configurations & Utilities
+pyyaml>=6.0
+pandas>=2.0.0
+tqdm>=4.65.0
+
+# Visualization & Plotting
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Testing & Quality
+pytest>=7.4.0
