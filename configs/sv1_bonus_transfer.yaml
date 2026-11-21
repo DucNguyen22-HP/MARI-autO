@@ -1,43 +1,43 @@
-# SV1 Configuration: Transfer Learning for Bonus Stage (Giai đoạn 3: Màn thưởng, 25/11 - 30/11)
-# Machine 1 (SV1): Initialized from best 1-1 checkpoint
-
-experiment:
-  name: "sv1_bonus_stage_transfer"
-  author: "SV1"
-  seed: 101
-  device: "cuda"
-  pretrained_checkpoint: "checkpoints/best_1-1.pt" # Transfer learning checkpoint
+# Cấu hình học chuyển giao màn thưởng của SV1 (Giai đoạn 3: 25/11 - 30/11)
+# Khởi tạo từ checkpoint tốt nhất của 1-1
+level: "1-2" # Màn thưởng trong danh sách [1-2, 1-4, 2-1, 3-1, 3-3, 4-1, 5-2, 6-1]
+seed: 101
+device: auto
+run_dir: "runs/1-2/sv1_bonus_transfer"
+resume: "checkpoints/best_1-1.pt" # Checkpoint 1-1 đã đạt flag_rate >= 0.8
+torch_threads: 2
+checkpoint_every: 500_000
+eval_episodes: 5
+eval_max_steps: 3000
+video: true
 
 env:
-  env_id: "SuperMarioBros-1-2-v0" # Bonus stage (e.g., 1-2 or 3-1)
-  action_type: "simple"
-  skip_frames: 4
-  img_size: [84, 84]
-  shaped_reward: true
-  reward_kwargs:
-    progress_weight: 1.0
-    death_penalty: -25.0
-    flag_bonus: 100.0
-    time_penalty: -0.15
+  actions: simple
+  frame_skip: 4
+  frame_stack: 4
+  size: 84
+  # [x_pos, time, death, coin, enemy]
+  weights: [1.0, 1.0, 2.0, 0.05, 0.05]
+  noop_max: 30
+  normalize_reward: true
 
-ppo:
-  total_timesteps: 3000000
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 8
-  lr: 0.0001 # Lower learning rate for fine-tuning
-  gamma: 0.99
+model: {}
+
+algo:
+  num_envs: 16
+  num_steps: 256
+  num_minibatches: 8
+  update_epochs: 4
+  total_steps: 5_000_000 # Tối đa 10M bước
+  lr: 1.5e-4 # Tốc độ học nhỏ hơn để tinh chỉnh chính sách
+  anneal_lr: true
+  adam_eps: 1e-5
+  gamma: 0.9
   gae_lambda: 0.95
-  clip_ratio: 0.2
-  value_coef: 0.5
-  entropy_coef: 0.01
+  clip_coef: 0.2
+  clip_vloss: false
+  norm_adv: true
+  ent_coef: 0.01
+  vf_coef: 0.25
   max_grad_norm: 0.5
-
-evaluation:
-  eval_interval_steps: 50000
-  num_eval_episodes: 10
-
-output:
-  checkpoint_dir: "checkpoints"
-  log_dir: "logs/sv1_bonus"
-  eval_dir: "eval_results/sv1_bonus"
+  target_kl: null

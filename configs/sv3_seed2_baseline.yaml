@@ -1,42 +1,43 @@
-# SV3 Configuration: Baseline with Second Seed (Giai đoạn 3: Máy 3 SV3, 25/11 - 30/11)
-# Experiment: Seed 2 baseline verification against SV2's ablation
-
-experiment:
-  name: "sv3_baseline_seed_2"
-  author: "SV3"
-  seed: 84 # Distinct second seed
-  device: "cuda"
+# Cấu hình chạy đối chứng Seed 2 của SV3 (Giai đoạn 3: Máy 3 SV3)
+# Giữ nguyên cấu hình gốc nhưng đổi seed=2 để đối chiếu thống kê
+level: "1-1"
+seed: 2
+device: auto
+run_dir: "runs/1-1/sv3_seed2_baseline"
+resume: null
+torch_threads: 2
+checkpoint_every: 500_000
+eval_episodes: 5
+eval_max_steps: 3000
+video: true
 
 env:
-  env_id: "SuperMarioBros-1-1-v0"
-  action_type: "simple"
-  skip_frames: 4
-  img_size: [84, 84]
-  shaped_reward: true
-  reward_kwargs:
-    progress_weight: 1.0
-    death_penalty: -15.0
-    flag_bonus: 50.0
-    time_penalty: -0.1
+  actions: simple
+  frame_skip: 4
+  frame_stack: 4
+  size: 84
+  # [x_pos, time, death, coin, enemy]
+  weights: [1.0, 1.0, 2.0, 0.05, 0.05]
+  noop_max: 30
+  normalize_reward: true
 
-ppo:
-  total_timesteps: 5000000
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 10
-  lr: 0.00025
-  gamma: 0.99 # Standard baseline gamma
+model: {}
+
+algo:
+  num_envs: 16
+  num_steps: 256
+  num_minibatches: 8
+  update_epochs: 4
+  total_steps: 5_000_000
+  lr: 2.5e-4
+  anneal_lr: true
+  adam_eps: 1e-5
+  gamma: 0.9 # Giữ nguyên baseline 0.90
   gae_lambda: 0.95
-  clip_ratio: 0.2
-  value_coef: 0.5
-  entropy_coef: 0.01
+  clip_coef: 0.2
+  clip_vloss: false
+  norm_adv: true
+  ent_coef: 0.01
+  vf_coef: 0.25
   max_grad_norm: 0.5
-
-evaluation:
-  eval_interval_steps: 100000
-  num_eval_episodes: 10
-
-output:
-  checkpoint_dir: "checkpoints"
-  log_dir: "logs/sv3_seed2"
-  eval_dir: "eval_results/sv3_seed2"
+  target_kl: null

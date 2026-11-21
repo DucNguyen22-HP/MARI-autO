@@ -1,42 +1,43 @@
-# SV2 Configuration: Ablation Study on Stage 1-1 (Giai đoạn 3: Máy 2 SV2, 25/11 - 30/11)
-# Experiment: Gamma ablation (gamma = 0.9 vs baseline 0.99)
-
-experiment:
-  name: "sv2_ablation_gamma_0_9"
-  author: "SV2"
-  seed: 42
-  device: "cuda"
+# Cấu hình thí nghiệm so sánh trên 1-1 của SV2 (Giai đoạn 3: Máy 2 SV2)
+# Thí nghiệm biến đổi: gamma = 0.99 (so với baseline gamma = 0.90 trong default.yaml)
+level: "1-1"
+seed: 1
+device: auto
+run_dir: "runs/1-1/sv2_ablation_gamma_099"
+resume: null
+torch_threads: 2
+checkpoint_every: 500_000
+eval_episodes: 5
+eval_max_steps: 3000
+video: true
 
 env:
-  env_id: "SuperMarioBros-1-1-v0"
-  action_type: "simple"
-  skip_frames: 4
-  img_size: [84, 84]
-  shaped_reward: true
-  reward_kwargs:
-    progress_weight: 1.0
-    death_penalty: -15.0
-    flag_bonus: 50.0
-    time_penalty: -0.1
+  actions: simple
+  frame_skip: 4
+  frame_stack: 4
+  size: 84
+  # [x_pos, time, death, coin, enemy]
+  weights: [1.0, 1.0, 2.0, 0.05, 0.05]
+  noop_max: 30
+  normalize_reward: true
 
-ppo:
-  total_timesteps: 5000000
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 10
-  lr: 0.00025
-  gamma: 0.90 # Ablation: Changed gamma from 0.99 to 0.90
+model: {}
+
+algo:
+  num_envs: 16
+  num_steps: 256
+  num_minibatches: 8
+  update_epochs: 4
+  total_steps: 5_000_000
+  lr: 2.5e-4
+  anneal_lr: true
+  adam_eps: 1e-5
+  gamma: 0.99 # Thí nghiệm: Tăng gamma từ 0.90 lên 0.99
   gae_lambda: 0.95
-  clip_ratio: 0.2
-  value_coef: 0.5
-  entropy_coef: 0.01
+  clip_coef: 0.2
+  clip_vloss: false
+  norm_adv: true
+  ent_coef: 0.01
+  vf_coef: 0.25
   max_grad_norm: 0.5
-
-evaluation:
-  eval_interval_steps: 100000
-  num_eval_episodes: 10
-
-output:
-  checkpoint_dir: "checkpoints"
-  log_dir: "logs/sv2_ablation"
-  eval_dir: "eval_results/sv2_ablation"
+  target_kl: null
