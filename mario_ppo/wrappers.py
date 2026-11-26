@@ -137,7 +137,21 @@ class FrameSkip(gym.Wrapper):
         self.skip = skip
 
     def step(self, action):
-        raise NotImplementedError("TODO: FrameSkip.step")
+        total_reward = None
+        prev_obs = None
+        obs = None
+        terminated = False
+        truncated = False
+        info = {}
+        for _ in range(self.skip):
+            prev_obs = obs
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            r = np.asarray(reward, dtype=np.float32)
+            total_reward = r.copy() if total_reward is None else total_reward + r
+            if terminated or truncated:
+                break
+        max_frame = obs if prev_obs is None else np.maximum(prev_obs, obs)
+        return max_frame, total_reward, terminated, truncated, info
 
 
 class GrayResize(gym.ObservationWrapper):
@@ -151,10 +165,14 @@ class GrayResize(gym.ObservationWrapper):
     def __init__(self, env, size=84):
         super().__init__(env)
         self.size = size
-        raise NotImplementedError("TODO: GrayResize.__init__ (đặt self.observation_space)")
+        self.observation_space = gym.spaces.Box(
+            low=0, high=255, shape=(size, size), dtype=np.uint8
+        )
 
     def observation(self, obs):
-        raise NotImplementedError("TODO: GrayResize.observation")
+        gray = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(gray, (self.size, self.size), interpolation=cv2.INTER_AREA)
+        return resized.astype(np.uint8, copy=False)
 
 
 class ScalarizeReward(gym.Wrapper):
@@ -168,10 +186,19 @@ class ScalarizeReward(gym.Wrapper):
 
     def __init__(self, env, weights):
         super().__init__(env)
-        raise NotImplementedError("TODO: ScalarizeReward.__init__")
+        reward_space = getattr(env.unwrapped, "reward_space", None)
+        expected = reward_space.shape[0] if reward_space is not None else 5
+        self.weights = np.asarray(weights, dtype=np.float32)
+        if self.weights.ndim != 1 or self.weights.shape[0] != expected:
+            raise ValueError(f"Expected {expected} reward weights, got {self.weights.shape}")
 
     def step(self, action):
-        raise NotImplementedError("TODO: ScalarizeReward.step")
+        obs, reward, terminated, truncated, info = self.env.step(action)
+        vec = np.asarray(reward, dtype=np.float32)
+        info = dict(info)
+        info["vector_reward"] = vec
+        scalar_reward = float(np.dot(self.weights, vec))
+        return obs, scalar_reward, terminated, truncated, info
 
 
 # ---------------------------------------------------------------------------------------------------------

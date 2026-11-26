@@ -28,7 +28,22 @@ def compute_gae(rewards, values, terminated, truncated, final_values, last_value
       - Truy hồi lùi: A_t = delta_t + gamma * lam * (1 - terminated_t) * (1 - truncated_t) * A_{t+1}
         (sau khi kết thúc hoặc bị cắt, bước kế trong bộ đệm thuộc lượt khác).
     """
-    raise NotImplementedError("TODO: compute_gae")
+    T, N = rewards.shape
+    advantages = torch.zeros_like(rewards)
+    gae = torch.zeros(N, dtype=rewards.dtype, device=rewards.device)
+
+    for t in reversed(range(T)):
+        next_non_terminal = 1.0 - terminated[t]
+        next_not_done = next_non_terminal * (1.0 - truncated[t])
+        bootstrap = last_value if t == T - 1 else values[t + 1]
+        next_value = torch.where(truncated[t] > 0.5, final_values[t], bootstrap)
+
+        delta = rewards[t] + gamma * next_non_terminal * next_value - values[t]
+        gae = delta + gamma * lam * next_not_done * gae
+        advantages[t] = gae
+
+    returns = advantages + values
+    return advantages, returns
 
 
 def clipped_policy_loss(ratio, advantages, clip):
