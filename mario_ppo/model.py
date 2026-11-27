@@ -30,10 +30,26 @@ class ActorCritic(nn.Module):
 
     def __init__(self, n_actions, in_channels=4):
         super().__init__()
-        raise NotImplementedError("TODO: ActorCritic.__init__ (thân CNN, self.policy, self.value)")
+        self.trunk = nn.Sequential(
+            _init(nn.Conv2d(in_channels, 32, kernel_size=8, stride=4)),
+            nn.ReLU(),
+            _init(nn.Conv2d(32, 64, kernel_size=4, stride=2)),
+            nn.ReLU(),
+            _init(nn.Conv2d(64, 64, kernel_size=3, stride=1)),
+            nn.ReLU(),
+            nn.Flatten(),
+            _init(nn.Linear(64 * 7 * 7, 512)),
+            nn.ReLU(),
+        )
+        self.policy = _init(nn.Linear(512, n_actions), gain=0.01)
+        self.value = _init(nn.Linear(512, 1), gain=1.0)
 
     def forward(self, obs):
-        raise NotImplementedError("TODO: ActorCritic.forward")
+        x = obs.to(dtype=torch.float32) / 255.0
+        hidden = self.trunk(x)
+        logits = self.policy(hidden)
+        value = self.value(hidden).squeeze(-1)
+        return logits, value
 
     @torch.no_grad()
     def act(self, obs):
